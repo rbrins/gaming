@@ -165,13 +165,14 @@ getRandNum a b c = fst (randomR(a, b) c)
 -- gets passed the list of tuples that contain (Weather Description, Temperature)
 
 randWeather :: [(String, Integer)] -> StdGen -> String
-randWeather a b = selectWeather (fst a) (getRandNum 1 11 b)
+randWeather a b = selectWeather (map (\(x, _) -> x) a) (getRandNum 1 11 b)
+--randWeather a b = selectWeather (fst a) (getRandNum 1 11 b)
 
 -- gets passed the specific months needing a new date
 -- then passes the second part of the tuple (which is the list of tuples that contain (Weather Description, Temp)
 --      before returning the string from the other functions
 randMnthWeather :: (String, [(String, Integer)]) -> StdGen -> String
-randMnthWeather a b = randWeather (fst (snd a)) b
+randMnthWeather a b = randWeather (snd a) b
 
 --let g <- newStdGen
 --  print . take 10 $ (randomRs ('a', 'z') g)
