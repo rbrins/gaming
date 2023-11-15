@@ -151,33 +151,65 @@ monthSeasons = [ ("New Years", springWeather)
 - month data in ~[ (String,    [(String,              Integer    )]) ]~
 - month data    ~[ (MonthName, [(Weather Description, Temperature)]) ]~
 
-*** TODO Bring the ~getRandNum~ out from inside the nested function and just pass the return value at the top
+*** DONE Bring the ~getRandNum~ out from inside the nested function and just pass the return value at the top
 
+- State "DONE"       from "TODO"       [2023-11-14 Tue 23:13]
 *** Haskell
 #+BEGIN_SRC haskell :tangle calgen.hs
-
-selectWeather :: [String] -> Int -> String
-selectWeather a b = last (take b a)
 
 getRandNum :: Int -> Int -> StdGen -> Int
 getRandNum a b c = fst (randomR(a, b) c)
 
--- gets passed the list of tuples that contain (Weather Description, Temperature)
+-- gives the 2d6 bell curve needed for the tables
+twoD6roll :: StdGen -> StdGen -> Int
+twoD6roll a b = (getRandNum 1 6 a) + (getRandNum 1 6 b)
 
-randWeather :: [(String, Integer)] -> StdGen -> String
-randWeather a b = selectWeather (map (\(x, _) -> x) a) (getRandNum 1 11 b)
+-- gets passed list of strings that contain the weather descriptions
+selectWeather :: [String] -> Int -> String
+selectWeather a b = last (take b a)
+
+-- gets passed the list of tuples that contain (Weather Description, Temperature)
+randWeather :: [(String, Integer)] -> Int -> String
+randWeather a b = selectWeather (map (\(x, _) -> x) a) b
 --randWeather a b = selectWeather (fst a) (getRandNum 1 11 b)
 
 -- gets passed the specific months needing a new date
 -- then passes the second part of the tuple (which is the list of tuples that contain (Weather Description, Temp)
 --      before returning the string from the other functions
-randMnthWeather :: (String, [(String, Integer)]) -> StdGen -> String
-randMnthWeather a b = randWeather (snd a) b
+-- putting the getRandNum here to keep this function as the abstracted level of diving into the others
+randMnthWeather :: (String, [(String, Integer)]) -> StdGen -> StdGen -> String
+randMnthWeather a b c = randWeather (snd a) ((twoD6roll b c) - 1)
 
 --let g <- newStdGen
 --  print . take 10 $ (randomRs ('a', 'z') g)
 
 -- pass the full month Season data to the function
 --randWeatherforMonth (head monthSeasons) g
+
+#+END_SRC
+
+** Get Temperature for the Weather
+
+*** TODO add tuple for temperature to have low and high for the day
+*** Haskell 
+going to reuse a lot of our structure from before but this time looking at the temperature side
+#+BEGIN_SRC haskell :tangle calgen.hs
+
+-- creates day's temperature high and low
+createTempSpread :: Integer -> Integer -> Integer -> (Integer, Integer)
+createTempSpread baseTemp dev1 dev2 = (baseTemp + dev1, baseTemp - dev2)
+
+-- gets passed the list of tuples that contain (Weather Description, Temperature)
+-- return the Temperature for a given Weather Description
+getBaseTemp :: [(String, Integer)] -> String -> Integer 
+getBaseTemp weatherInfo weatherDescription = snd (head (filter (\(x, _) -> x == weatherDescription) weatherInfo))
+
+-- gets passed the specific months needing a new date
+-- then passes the second part of the tuple (which is the list of tuples that contain (Weather Description, Temp)
+-- putting the getRandNum here to keep this function as the abstracted level of diving into the others
+getBaseTempforMonth :: (String, [(String, Integer)]) -> String -> Integer
+getBaseTempforMonth monthInfo weatherDescription = getBaseTemp (snd monthInfo) weatherDescription
+
+
 
 #+END_SRC
