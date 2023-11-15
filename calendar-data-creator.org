@@ -1,0 +1,182 @@
+#+TITLE: Calendar Data Generator
+#+AUTHOR: Russell Brinson
+
+* Overview 
+
+I have a calendar system in the fictional world for playing dungeons and dragons in that is different from the normal gregorian calendar. 
+
+I had an idea to create a daily weather display that would generate weather and temperatures based on preset lookup tables and normal distributions. To faciliate this, I first need to convert the current format into one that easier to read by code for playing with this data.
+
+This year is based on 7 days in 7 weeks / month in 7 months for the year. With a few outside of month holidays and celebrations. For the sake of simplifing, each of this will be given a ~dayID~ that will correspond to that day on a given year. This will not be what is displayed to the end users.
+
+** Backend System(s) 
+
+Will try to make a few different backend systems to learn some new languages. Go and haskell. 
+These will ultimately server to do:
+- open and read file into memory then close file
+- use last fictional date data to generate the next date, when triggered
+- write next data data to file then close file
+
+** Frontend System(s)
+not sure which language(s) at the moment
+- open and read file into memory then close file
+- use last fictional data data to showcase images and animations on a screen (like a weather report)
+- repeat on periodic time to refresh
+
+** calendar file
+flat file structure for now, could get slightly more complicated later and use a database
+needs to store:
+- Month, Week, Day, Date, Year
+- Season
+- Weather
+- Temp: max, min
+- Moon(s?)
+- Astrological signs?
+
+
+* Define Variables
+We will key each month to the season it corresponds with, then key each season to the weather it can generate. Then finally, key each weather to a max and min temperature (maybe?).
+
+** Months to Seasons
+Note, New years and Midwinter aren't months, these are out of month celebrations but keeping similar seasons. 
+
+*** Golang Implementation
+#+BEGIN_SRC go
+
+type monthInfo struct {
+  name string
+  season string
+  diffWeather [11]seasonWeather
+}
+
+type seasonWeather struct {
+  name string
+  temp int
+}
+
+type dayID struct {
+  idNum int
+  month string
+  weather string
+  temp int
+}
+
+
+#+END_SRC
+
+*** Hasekll Implementation
+#+BEGIN_SRC haskell :tangle calgen.hs
+import System.Random
+
+
+
+springWeather = [ ("Cold, gentle snow", 40)
+                , ("Chilly, damp", 42)
+                , ("Windy, cloudy", 42)
+                , ("Brisk, clear", 45)
+                , ("Clement, cheery", 50)
+                , ("Warm, sunny", 60)
+                , ("Bright, fresh", 61)
+                , ("Blustery, drizzle", 55)
+                , ("Pouring rain", 45)
+                , ("Gloomy, cool", 43)
+                , ("Chill mist", 41)
+                ]
+
+summerWeather = [ ("Cool winds", 60)
+                , ("Low cloud, mist", 62)
+                , ("Warm, gentle rain", 68)
+                , ("Brooding thunder", 72)
+                , ("Balmy, clear", 78)
+                , ("Hot, humid", 85)
+                , ("Overcast, muggy", 81)
+                , ("Sweltering, still", 90)
+                , ("Baking, dry", 87)
+                , ("Warm wind", 79)
+                , ("Thunder storm", 75)
+                ]
+
+autumnWeather = [ ("Torrential rain", 72)
+                , ("Rolling fog", 68)
+                , ("Driving rain", 67)
+                , ("Bracing wind", 65)
+                , ("Balmy, clement", 75)
+                , ("Clear, chilly", 64)
+                , ("Drizzle, damp", 65)
+                , ("Cloudy, misty", 62)
+                , ("Brooding clouds", 63)
+                , ("Frosty, chill", 45)
+                , ("Icy gentle snow", 32)
+                ]
+
+winterWeather = [ ("Deep freeze, hoarfrost", -10)
+                , ("Snow storm", 22)
+                , ("Relentless wind", 25)
+                , ("Bitter, silent", 15)
+                , ("Frigid, icy", 30)
+                , ("Clear, cold", 35)
+                , ("Freezing rain" , 32)
+                , ("Cold wind, gloomy", 33)
+                , ("Frigid mist", 31)
+                , ("Icy, steady snow", 28)
+                , ("Relentless blizzard", 25)
+                ]
+
+monthSeasons = [ ("New Years", springWeather) 
+               , ("Joseon", springWeather)
+               , ("Marta", springWeather)
+               , ("Nox", summerWeather)
+               , ("Luckless", summerWeather)
+               , ("Fomhar", autumnWeather)
+               , ("Marsbas", winterWeather)
+               , ("Midwinter", winterWeather)
+               , ("Cead", winterWeather)
+               ]
+
+#+END_SRC
+
+#+RESULTS:
+: ghci> ghci> ghci> ghci> ghci> ghci> ghci> ghci> ghci> ghci> ghci> ghci> ghci> ghci> 
+: <interactive>:333:18: error:
+:     parse error (possibly incorrect indentation or mismatched brackets)
+
+
+
+
+** Get Random Weather for a Season
+
+- month data will include the seasonal weather and weather associated temperature
+- need to get random weather, which in turn would get temperature and generate from there 
+
+- month data in ~[ (String,    [(String,              Integer    )]) ]~
+- month data    ~[ (MonthName, [(Weather Description, Temperature)]) ]~
+
+*** TODO Bring the ~getRandNum~ out from inside the nested function and just pass the return value at the top
+
+*** Haskell
+#+BEGIN_SRC haskell :tangle calgen.hs
+
+selectWeather :: [String] -> Int -> String
+selectWeather a b = last (take b a)
+
+getRandNum :: Int -> Int -> StdGen -> Int
+getRandNum a b c = fst (randomR(a, b) c)
+
+-- gets passed the list of tuples that contain (Weather Description, Temperature)
+
+randWeather :: [(String, Integer)] -> StdGen -> String
+randWeather a b = selectWeather (fst a) (getRandNum 1 11 b)
+
+-- gets passed the specific months needing a new date
+-- then passes the second part of the tuple (which is the list of tuples that contain (Weather Description, Temp)
+--      before returning the string from the other functions
+randMnthWeather :: (String, [(String, Integer)]) -> StdGen -> String
+randMnthWeather a b = randWeather (fst (snd a)) b
+
+--let g <- newStdGen
+--  print . take 10 $ (randomRs ('a', 'z') g)
+
+-- pass the full month Season data to the function
+--randWeatherforMonth (head monthSeasons) g
+
+#+END_SRC
