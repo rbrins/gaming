@@ -37,7 +37,7 @@ needs to store:
 * Define Variables
 We will key each month to the season it corresponds with, then key each season to the weather it can generate. Then finally, key each weather to a max and min temperature (maybe?).
 
-** Months to Seasons
+** Months, Seasons, and Temperatures
 Note, New years and Midwinter aren't months, these are out of month celebrations but keeping similar seasons. 
 
 *** Golang Implementation
@@ -67,8 +67,7 @@ type dayID struct {
 *** Hasekll Implementation
 #+BEGIN_SRC haskell :tangle calgen.hs
 import System.Random
-
-
+import System.IO
 
 springWeather = [ ("Cold, gentle snow", 40)
                 , ("Chilly, damp", 42)
@@ -143,6 +142,9 @@ monthSeasons = [ ("New Years", springWeather)
 
 
 
+** TODO Add moon status
+
+* Get Season, Weather, and Temperature from Month
 ** Get Random Weather for a Season
 
 - month data will include the seasonal weather and weather associated temperature
@@ -183,14 +185,12 @@ randMnthWeather a b c = randWeather (snd a) ((twoD6roll b c) - 1)
 --let g <- newStdGen
 --  print . take 10 $ (randomRs ('a', 'z') g)
 
--- pass the full month Season data to the function
---randWeatherforMonth (head monthSeasons) g
-
 #+END_SRC
 
 ** Get Temperature for the Weather
 
-*** TODO add tuple for temperature to have low and high for the day
+*** DONE add tuple for temperature to have low and high for the day
+- State "DONE"       from "TODO"       [2023-11-14 Tue 23:54]
 *** Haskell 
 going to reuse a lot of our structure from before but this time looking at the temperature side
 #+BEGIN_SRC haskell :tangle calgen.hs
@@ -211,5 +211,27 @@ getBaseTempforMonth :: (String, [(String, Integer)]) -> String -> Integer
 getBaseTempforMonth monthInfo weatherDescription = getBaseTemp (snd monthInfo) weatherDescription
 
 
+
+#+END_SRC
+
+* Read in the file
+
+** Open, Read, and Close the File
+*** Haskell
+#+BEGIN_SRC haskell :tangle calgen.hs
+openReadClose = do
+  fileHandle <- openFile "test.cal" ReadMode
+  contents <- hGetContents fileHandle
+  putStrLn contents
+  importDay contents
+  hClose fileHandle
+#+END_SRC
+
+** Put the contents into better variables
+#+BEGIN_SRC haskell :tangle calgen.hs
+
+-- gets passed a single day to turn into a better formatted piece of data
+importDay :: String -> String
+importDay a = tail a
 
 #+END_SRC
